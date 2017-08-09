@@ -4,8 +4,10 @@ namespace phparia\Tests\Functional;
 use phparia\Client\Phparia;
 use \PHPUnit_Framework_TestCase;
 use Symfony\Component\Yaml\Yaml;
-use Zend\Log\LoggerInterface;
-use Zend\Log;
+use Psr\Log\LoggerInterface;
+use Psr\Log;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 
 abstract class PhpariaTestCase extends PHPUnit_Framework_TestCase
@@ -46,12 +48,8 @@ abstract class PhpariaTestCase extends PHPUnit_Framework_TestCase
         $this->amiAddress = $value['tests']['ami_address'];
         $this->dialString = $value['tests']['dial_string'];
 
-        $this->logger = new Log\Logger();
-        $logWriter = new Log\Writer\Stream("php://output");
-        $this->logger->addWriter($logWriter);
-        $filter = new Log\Filter\SuppressFilter(true);
-        //$filter = new Log\Filter\Priority(\Zend\Log\Logger::NOTICE);
-        $logWriter->addFilter($filter);
+        $this->logger = new Logger();
+        $this->logger->pushHandler(new StreamHandler('php://output', Logger::NOTICE))
 
         $this->client = new Phparia($this->logger);
         $this->client->connect($this->ariAddress, $this->amiAddress);

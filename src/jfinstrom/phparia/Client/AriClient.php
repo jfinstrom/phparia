@@ -35,7 +35,7 @@ use phparia\Api\Sounds;
 use phparia\Events\IdentifiableEventInterface;
 use phparia\Events\Message;
 use React\EventLoop\LoopInterface;
-use Zend\Log\LoggerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * @author Brian Smith <wormling@gmail.com>
@@ -157,7 +157,7 @@ class AriClient
             'verify' => false
         ];
         $config = array_merge($config, $httpOptions);
-        
+
         $this->endpoint = new Client($config);
 
         $this->wsClient = new WebSocket($address, $this->eventLoop, $this->logger, $streamOptions);
@@ -169,7 +169,7 @@ class AriClient
             if (class_exists($eventType)) {
                 $event = new $eventType($this, $rawMessage->getData());
             } else {
-                $this->logger->warn("Event: '$eventType' not implemented");
+                $this->logger->warning("Event: '$eventType' not implemented");
 
                 // @todo Create a generic event for any that are not implemented
 

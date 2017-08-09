@@ -22,7 +22,8 @@ use phparia\Client\Phparia;
 use phparia\Events\ChannelDtmfReceived;
 use phparia\Events\StasisStart;
 use Symfony\Component\Yaml\Yaml;
-use Zend\Log;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 // Make sure composer dependencies have been installed
 require __DIR__.'/../../../../vendor/autoload.php';
@@ -33,10 +34,10 @@ ini_set('xdebug.var_display_max_depth', 4);
 /**
  * @author Brian Smith <wormling@gmail.com>
  */
-class InputExample
+class AriAmiExample
 {
     /**
-     * Example of listening for DTMF input from a caller.
+     * Example of creating a stasis app which also supports AMI events.
      *
      * @var Phparia
      */
@@ -48,17 +49,13 @@ class InputExample
         $value = Yaml::parse(file_get_contents($configFile));
 
         $ariAddress = $value['examples']['client']['ari_address'];
-
-        $logger = new Log\Logger();
-        $logWriter = new Log\Writer\Stream("php://output");
-        $logger->addWriter($logWriter);
-        //$filter = new \Zend\Log\Filter\SuppressFilter(true);
-        $filter = new Log\Filter\Priority(Log\Logger::NOTICE);
-        $logWriter->addFilter($filter);
+        $amiAddress = $value['examples']['client']['ami_address'];
+        $logger = new Logger();
+        $logger->pushHandler(new StreamHandler('php://output', Logger::NOTICE));
 
         // Connect to the ARI server
         $client = new Phparia($logger);
-        $client->connect($ariAddress);
+        $client->connect($ariAddress, $amiAddress);
         $this->client = $client;
 
         // Listen for the stasis start
@@ -66,11 +63,18 @@ class InputExample
             // Put the new channel in a bridge
             $channel = $event->getChannel();
             $bridge = $this->client->bridges()->createBridge(uniqid(), 'dtmf_events, mixing', 'bridgename');
-            $this->client->bridges()->addChannel($bridge->getId(), $channel->getId(), null);
+            $this->client->bridges()->addChannel($bridge->getId(), $channel->getId());
 
-            // Listen for DTMF
-            $channel->onChannelDtmfReceived(function (ChannelDtmfReceived $event) {
+            // Listen for DTMF and hangup when '#' is pressed
+            $channel->onChannelDtmfReceived(function (ChannelDtmfReceived $event) use ($channel) {
                 $this->log("Got digit: {$event->getDigit()}");
+                if ($event->getDigit() === '#') {
+                    $channel->hangup();
+                }
+            });
+
+            $this->client->getWsClient()->on('Hangup', function ($event) {
+                $this->log('User hung up');
             });
         });
 
@@ -88,4 +92,4 @@ class InputExample
 
 }
 
-new InputExample();
+new AriAmiExample();

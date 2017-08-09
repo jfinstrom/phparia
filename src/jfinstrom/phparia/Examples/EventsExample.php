@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright 2014 Brian Smith <wormling@gmail.com>.
+ * Copyright 2017 Brian Smith <wormling@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@
 
 namespace phparia\Examples;
 
+use Clue\React\Ami\Protocol\Event;
+use Devristo\Phpws\Messaging\WebSocketMessage;
 use phparia\Client\Phparia;
-use phparia\Events\ChannelDtmfReceived;
-use phparia\Events\StasisStart;
+use phparia\Events\Message;
 use Symfony\Component\Yaml\Yaml;
-use Zend\Log;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 // Make sure composer dependencies have been installed
 require __DIR__.'/../../../../vendor/autoload.php';
@@ -33,10 +35,10 @@ ini_set('xdebug.var_display_max_depth', 4);
 /**
  * @author Brian Smith <wormling@gmail.com>
  */
-class RecordingExample
+class EventsExample
 {
     /**
-     * Example of listening for DTMF input from a caller.
+     * Example of creating a stasis app which also supports AMI events.
      *
      * @var Phparia
      */
@@ -48,34 +50,23 @@ class RecordingExample
         $value = Yaml::parse(file_get_contents($configFile));
 
         $ariAddress = $value['examples']['client']['ari_address'];
-
-        $logger = new Log\Logger();
-        $logWriter = new Log\Writer\Stream("php://output");
-        $logger->addWriter($logWriter);
-        //$filter = new \Zend\Log\Filter\SuppressFilter(true);
-        $filter = new Log\Filter\Priority(Log\Logger::NOTICE);
-        $logWriter->addFilter($filter);
-
+        $amiAddress = $value['examples']['client']['ami_address'];
+        $logger = new Logger();
+        $logger->pushHandler(new StreamHandler('php://output', Logger::NOTICE));
         // Connect to the ARI server
         $client = new Phparia($logger);
-        $client->connect($ariAddress);
+        $client->connect($ariAddress, $amiAddress);
         $this->client = $client;
-        $recordingFile = uniqid('recording_');
 
-        // Listen for the stasis start
-        $client->onStasisStart(function (StasisStart $event) use ($recordingFile) {
-            // Put the new channel in a bridge
-            $channel = $event->getChannel();
-            $bridge = $this->client->bridges()->createBridge(uniqid(), 'dtmf_events, mixing', 'bridgename');
-            $this->client->bridges()->addChannel($bridge->getId(), $channel->getId(), null);
-
-            $bridge->record($recordingFile, 'wav');
+        // ARI Events
+        $client->getAriClient()->getWsClient()->on("message", function(WebSocketMessage $rawMessage) {
+            $message = new Message($rawMessage->getData());
+            $this->log($message->getType());
         });
 
-        $client->onStasisEnd(function (StatisEnd $event) use ($client, $recordingFile) {
-            $liveRecording = $client->recordings()->getLiveRecording($recordingFile);
-            $this->log("Got recording file: {$liveRecording->getName()}");
-            
+        // AMI Eveents
+        $client->getAmiClient()->getClient()->on('event', function (Event $event) {
+            $this->log($event->getName());
         });
 
         $this->client->run();
@@ -92,4 +83,4 @@ class RecordingExample
 
 }
 
-new RecordingExample();
+new EventsExample();

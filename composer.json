@@ -1,5 +1,5 @@
 {
-  "name": "wormling/phparia",
+  "name": "jfinstrom/phparia",
   "type": "library",
   "minimum-stability": "dev",
   "description": "Asterisk REST Interface (ARI) client for PHP.",
@@ -23,37 +23,34 @@
       "email": "wormling@gmail.com",
       "homepage": "http://wormling.github.com/",
       "role": "Developer"
+    },
+    {
+      "name": "James Finstrom",
+      "email": "jfinstrom@gmail.com",
+      "homepage": "https://github.com/jfinstrom",
+      "role": "Developer"
     }
   ],
   "autoload": {
     "psr-0": {
-      "phparia": "src/wormling"
+      "phparia": "src/jfinstrom"
     }
   },
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/Devristo/phpws"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/wormling/evenement"
-    }
-  ],
   "extra": {
     "incenteev-parameters": {
-      "file": "src/wormling/phparia/config.yml",
+      "file": "src/jfinstrom/phparia/config.yml",
       "parameter-key": "examples"
     }
   },
   "require": {
     "php": ">=5.4",
-    "evenement/evenement": "dev-master",
+    "evenement/evenement": "2.0",
     "educoder/pest": "1.0.0",
     "devristo/phpws": "dev-master",
     "clue/ami-react": "~0.3.0",
     "incenteev/composer-parameter-handler": ">=2.0",
-    "guzzlehttp/guzzle": "^6.2"
+    "guzzlehttp/guzzle": "^6.2",
+    "monolog/monolog": "1.23.0"
   },
   "require-dev": {
     "phpunit/phpunit": ">=5.0"

@@ -19,7 +19,10 @@ namespace {
     use phparia\Resources\Playback;
     use phparia\Tests\Functional\PhpariaTestCase;
     use React\EventLoop\LoopInterface;
-    use Zend\Log\LoggerInterface;
+    use Psr\Log\LoggerInterface;
+    use Psr\Log;
+    use Monolog\Logger;
+    use Monolog\Handler\StreamHandler;
 
     class PhpariaTest extends PhpariaTestCase
     {

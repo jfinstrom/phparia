@@ -23,7 +23,8 @@ use phparia\Events\StasisStart;
 use phparia\Exception\ServerException;
 use phparia\Resources\Bridge;
 use Symfony\Component\Yaml\Yaml;
-use Zend\Log;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 // Make sure composer dependencies have been installed
 require __DIR__.'/../../../../vendor/autoload.php';
@@ -55,13 +56,8 @@ class DialExample
 
         $ariAddress = $value['examples']['client']['ari_address'];
         $dialString = $value['examples']['dial_example']['dial_string'];
-
-        $logger = new Log\Logger();
-        $logWriter = new Log\Writer\Stream("php://output");
-        $logger->addWriter($logWriter);
-        //$filter = new \Zend\Log\Filter\SuppressFilter(true);
-        $filter = new Log\Filter\Priority(Log\Logger::NOTICE);
-        $logWriter->addFilter($filter);
+        $logger = new Logger();
+        $logger->pushHandler(new StreamHandler('php://output', Logger::NOTICE));
 
         // Connect to the ARI server
         $this->client = new Phparia($logger);

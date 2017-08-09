@@ -24,7 +24,7 @@ use Clue\React\Ami\Factory;
 use Clue\React\Ami\Protocol\Event;
 use Devristo\Phpws\Client\WebSocket;
 use React\EventLoop\LoopInterface;
-use Zend\Log\LoggerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  *  AMI Client to get events not supported in ARI
@@ -87,7 +87,7 @@ class AmiClient
                     $this->wsClient->emit($event->getName(), (array)$event);
                 });
             }, function (\Exception $e) {
-                $this->logger->err('Connection error: '.$e->getMessage());
+                $this->logger->error('Connection error: '.$e->getMessage());
             });
     }
 

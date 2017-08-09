@@ -23,7 +23,10 @@ use GuzzleHttp\Promise\FulfilledPromise;
 use phparia\Events\Event;
 use React\EventLoop;
 use React\Promise\Deferred;
-use Zend\Log\LoggerInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
 class Phparia extends PhpariaApi
 {
